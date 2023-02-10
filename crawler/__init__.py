@@ -21,6 +21,8 @@ class Crawler(object):
         self.start_async()
         self.join()
 
+        self.frontier.record_info()
+
     def join(self):
         for worker in self.workers:
             worker.join()

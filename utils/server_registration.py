@@ -4,6 +4,7 @@ from utils.pcc_models import Register
 
 def init(df, user_agent, fresh):
     reg = df.read_one(Register, user_agent)
+    
     if not reg:
         reg = Register(user_agent, fresh)
         df.add_one(Register, reg)
