@@ -26,7 +26,14 @@ class Worker(Thread):
 
             if not scraper.is_valid(tbd_url):
                 self.frontier.add_filtered_url((tbd_url, "filtered out by text matching (already inserted in the queue)"))
+                self.frontier.mark_url_complete(tbd_url)
                 continue
+
+            if scraper.without_parameter(tbd_url):
+                if self.frontier.check_seen_url(tbd_url):
+                    self.frontier.add_filtered_url((tbd_url, "filtered out already seen url (already inserted in the queue)"))
+                    self.frontier.mark_url_complete(tbd_url)
+                    continue
 
             resp = download(tbd_url, self.config, self.logger)
             self.logger.info(

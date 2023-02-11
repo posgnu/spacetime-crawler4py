@@ -12,6 +12,9 @@ def scraper(url, resp, logger):
     status_code = resp.status
     error_code = resp.error
 
+    if resp.error and "Spacetime Response" in resp.error:
+        return False, [], [(url, f"space time error")], []
+
     if status_code != 200:
         if status_code >= 600:
             logger.info(error_code)
@@ -110,6 +113,9 @@ def extract_next_links(url, resp: Response, logger):
                 logger.info(f"url with nofollow attribute: {url}")
                 continue
         """
+
+        if without_parameter(href):
+            parsed_href = parsed_href._replace(query="", params="")
             
         url_candidate = parsed_href._replace(fragment="").geturl()
         url_candidate = url_candidate.strip()
@@ -134,7 +140,11 @@ def is_valid(url):
             return False
         if not check_less_information(parsed):
             return False
-        if not check_less_info_blog(parsed):
+        if not check_less_info(parsed):
+            return False
+        if not check_dataset(parsed):
+            return False
+        if not check_trap(parsed):
             return False
         return True
 
@@ -201,10 +211,62 @@ def check_less_information(parsed):
 
     return True
 
-def check_less_info_blog(parsed):
-    domains = ["https://ngs.ics.uci.edu/author/", "https://ngs.ics.uci.edu/category/", "https://ngs.ics.uci.edu/tag/"]
+def check_trap(parsed):
+    domains = ["https://www.ics.uci.edu/alumni",
+    "https://www.ics.uci.edu/community"]
+
+    if is_subdomain(parsed, domains):
+        return False
+
+    return True
+
+def check_less_info(parsed):
+    domains = ["https://ngs.ics.uci.edu/author/",
+     "https://ngs.ics.uci.edu/category/",
+      "https://ngs.ics.uci.edu/tag/",
+       "https://www.ics.uci.edu/~wjohnson/BIDA/",
+        "https://www.ics.uci.edu/honors",
+         "http://ics.uci.edu/honors",
+          "https://www.ics.uci.edu/ugrad",
+           "http://www.cert.ics.uci.edu/seminar",
+           "http://www.cert.ics.uci.edu/EMWS09",] 
+
+    if is_subdomain(parsed, domains):
+        return False
+    elif is_subdomain(parsed, ["https://gitlab.ics.uci.edu"]) and "-" in parsed.geturl(): 
+        return False
+    
+    return True
+
+def is_subdomain(parsed, domains):
+    domains = [urlparse(domain)._replace(scheme="").geturl() for domain in domains]
+    without_scheme = parsed._replace(scheme="").geturl()
+
+    return any(without_scheme.startswith(domain) for domain in domains)
+
+
+
+def without_parameter(url):
+    domains = ["https://swiki.ics.uci.edu/doku.php",
+     "http://www.ics.uci.edu/download/download.inc.php",
+      "https://archive.ics.uci.edu/ml/datasets.php",
+       "https://www.ics.uci.edu/honors",
+        "https://www.ics.uci.edu/ugrad",
+         "https://wiki.ics.uci.edu/doku.php",
+          "https://grape.ics.uci.edu/wiki",
+           "https://cbcl.ics.uci.edu/doku.php",
+           "https://gitlab.ics.uci.edu"]
+    parsed = urlparse(url)
+
+    if is_subdomain(parsed, domains):
+        return True
+
+    return False
+
+def check_dataset(parsed):
+    domains = ["https://archive.ics.uci.edu/ml/machine-learning-databases"]
 
     if any(parsed.geturl().startswith(domain) for domain in domains):
         return False
-    
+
     return True

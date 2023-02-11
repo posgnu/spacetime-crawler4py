@@ -11,10 +11,10 @@ def main(config_file, restart):
     cparser.read(config_file)
     config = Config(cparser)
     print("Config parsed")
-    # config.cache_server = get_cache_server(config, restart)
-    host = "styx.ics.uci.edu"
-    port = 9001
-    config.cache_server = (host, port)
+    config.cache_server = get_cache_server(config, restart)
+    # host = "styx.ics.uci.edu"
+    # port = 9001
+    # config.cache_server = (host, port)
     print("Cache server obtained")
     crawler = Crawler(config, restart)
     crawler.start()
